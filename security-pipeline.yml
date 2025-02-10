@@ -1,0 +1,24 @@
+name: Security Analysis
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  security-pipeline:
+    runs-on: ubuntu-latest
+    container:
+      image: squadappsec/cli:latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Run security pipeline
+        env:
+          CI_REPOSITORY_URL: https://github.com/${{ github.repository }}.git
+          CI_COMMIT_REF_NAME: ${{ env.GITHUB_REF_NAME }}
+          SQUADAPPSEC_APIKEY: ${{ secrets.SQUADAPPSEC_APIKEY }}
+        run: |
+          python /squadappsec/app.py --project $GITHUB_WORKSPACE -i test --break-pipeline high
+          python /squadappsec/app.py --project $GITHUB_WORKSPACE --update-fixed-vulnerabilities
